@@ -61,8 +61,7 @@ jobs:
             - "ADD_YOUR_SSH_KEY_FINGERPRINT_HERE"
       - run:
           name: Copy Docker image to EC2
-          command: |
-            scp -o StrictHostKeyChecking=no myapp.tar ubuntu@${AWS_EC2_HOST}:/home/ubuntu/myapp.tar
+            command: scp -o StrictHostKeyChecking=no myapp.tar ubuntu@13.60.190.186:/home/ubuntu/myapp.tar
       - run:
           name: Load and run Docker image on EC2
           command: |
