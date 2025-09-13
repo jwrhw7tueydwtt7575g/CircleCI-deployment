@@ -28,17 +28,18 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Build Docker image (inline Dockerfile)
+          name: Write Dockerfile to temp file
           command: |
-            docker build -t myapp:latest -f - . <<EOF
-            FROM python:3.9
+            echo "FROM python:3.9
             WORKDIR /app
             COPY . /app
             RUN pip install --no-cache-dir -e .
             EXPOSE 5000
             ENV FLASK_APP=application.py
-            CMD ["python", "application.py"]
-            EOF
+            CMD [\"python\", \"application.py\"]" > Dockerfile.ci
+      - run:
+          name: Build Docker image from temp Dockerfile
+          command: docker build -t myapp:latest -f Dockerfile.ci .
       - run:
           name: Save Docker image
           command: docker save myapp:latest -o myapp.tar
