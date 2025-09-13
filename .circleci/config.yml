@@ -1,0 +1,86 @@
+
+version: 2.1
+
+executors:
+  python-executor:
+    docker:
+      - image: circleci/python:3.8
+    working_directory: ~/repo
+
+jobs:
+  build:
+    executor: python-executor
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+      - run:
+          name: Run tests
+          command: pytest
+
+  docker_build:
+    docker:
+      - image: circleci/python:3.9
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build Docker image (inline Dockerfile)
+          command: |
+            docker build -t myapp:latest -f - . <<EOF
+            FROM python:3.9
+            WORKDIR /app
+            COPY . /app
+            RUN pip install --no-cache-dir -e .
+            EXPOSE 5000
+            ENV FLASK_APP=application.py
+            CMD ["python", "application.py"]
+            EOF
+      - run:
+          name: Save Docker image
+          command: docker save myapp:latest -o myapp.tar
+      - persist_to_workspace:
+          root: .
+          paths:
+            - myapp.tar
+
+  deploy:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - add_ssh_keys:
+          fingerprints:
+            - "ADD_YOUR_SSH_KEY_FINGERPRINT_HERE"
+      - run:
+          name: Copy Docker image to EC2
+          command: |
+            scp -o StrictHostKeyChecking=no myapp.tar ubuntu@${AWS_EC2_HOST}:/home/ubuntu/myapp.tar
+      - run:
+          name: Load and run Docker image on EC2
+          command: |
+            ssh -o StrictHostKeyChecking=no ubuntu@${AWS_EC2_HOST} "docker load -i /home/ubuntu/myapp.tar && docker run -d -p 80:80 myapp:latest"
+
+workflows:
+  version: 2
+  build_test_deploy:
+    jobs:
+      - build
+      - docker_build:
+          requires:
+            - build
+      - deploy:
+          requires:
+            - docker_build
+
+    
+
+
+
+
+
