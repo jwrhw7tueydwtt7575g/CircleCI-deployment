@@ -59,13 +59,13 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "ADD_YOUR_SSH_KEY_FINGERPRINT_HERE"
-    - run:
-      name: Copy Docker image to EC2
-      command: scp -o StrictHostKeyChecking=no myapp.tar ubuntu@13.60.190.186:/home/ubuntu/myapp.tar
+      - run:
+          name: Copy Docker image to EC2
+          command: scp -o StrictHostKeyChecking=no myapp.tar ubuntu@13.60.190.186:/home/ubuntu/myapp.tar
       - run:
           name: Load and run Docker image on EC2
           command: |
-            ssh -o StrictHostKeyChecking=no ubuntu@${AWS_EC2_HOST} "docker load -i /home/ubuntu/myapp.tar && docker run -d -p 80:80 myapp:latest"
+            ssh -o StrictHostKeyChecking=no ubuntu@13.60.190.186 "docker load -i /home/ubuntu/myapp.tar && docker run -d -p 80:80 myapp:latest"
 
 workflows:
   version: 2
