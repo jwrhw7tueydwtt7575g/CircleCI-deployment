@@ -58,11 +58,11 @@ jobs:
       - add_ssh_keys
       - run:
           name: Copy Docker image to EC2
-          command: scp -o StrictHostKeyChecking=no myapp.tar ubuntu@13.60.190.186:/home/ubuntu/myapp.tar
+          command: scp -o StrictHostKeyChecking=no myapp.tar ec2-user@13.53.109.127:/home/ec2-user/myapp.tar
       - run:
           name: Load and run Docker image on EC2
           command: |
-            ssh -o StrictHostKeyChecking=no ubuntu@13.60.190.186 "docker load -i /home/ubuntu/myapp.tar && docker run -d -p 80:80 myapp:latest"
+            ssh -o StrictHostKeyChecking=no ec2-user@13.53.109.127 "docker load -i /home/ec2-user/myapp.tar && docker run -d -p 80:80 myapp:latest"
 
 workflows:
   version: 2
