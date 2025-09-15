@@ -3,7 +3,7 @@ version: 2.1
 executors:
   python-executor:
     docker:
-      - image: circleci/python:3.8
+      - image: cimg/python:3.8    # updated to current Circle base image
     working_directory: ~/repo
 
 jobs:
@@ -23,20 +23,22 @@ jobs:
 
   docker_build:
     docker:
-      - image: circleci/python:3.9
+      - image: cimg/python:3.9
     steps:
       - checkout
       - setup_remote_docker
       - run:
           name: Write Dockerfile to temp file
           command: |
-            echo "FROM python:3.9
+            cat <<'EOF' > Dockerfile.ci
+            FROM python:3.9
             WORKDIR /app
             COPY . /app
             RUN pip install --no-cache-dir -e .
             EXPOSE 5000
             ENV FLASK_APP=application.py
-            CMD [\"python\", \"application.py\"]" > Dockerfile.ci
+            CMD ["python", "application.py"]
+            EOF
       - run:
           name: Build Docker image from temp Dockerfile
           command: docker build -t myapp:latest -f Dockerfile.ci .
@@ -50,19 +52,25 @@ jobs:
 
   deploy:
     docker:
-      - image: circleci/python:3.8
+      - image: cimg/python:3.8
     steps:
       - checkout
       - attach_workspace:
           at: .
-      - add_ssh_keys
+      # Load the SSH key you added in CircleCI UI (hostname must match below)
+      - add_ssh_keys:
+          fingerprints: []    # leave empty to load all keys for this hostname
+      - run:
+          name: Confirm SSH key loaded (debug)
+          command: ssh-add -L
       - run:
           name: Copy Docker image to EC2
           command: scp -o StrictHostKeyChecking=no myapp.tar ec2-user@13.53.109.127:/home/ec2-user/myapp.tar
       - run:
           name: Load and run Docker image on EC2
           command: |
-            ssh -o StrictHostKeyChecking=no ec2-user@13.53.109.127 "docker load -i /home/ec2-user/myapp.tar && docker run -d -p 80:80 myapp:latest"
+            ssh -o StrictHostKeyChecking=no ec2-user@13.53.109.127 \
+            "docker load -i /home/ec2-user/myapp.tar && docker run -d -p 80:80 myapp:latest"
 
 workflows:
   version: 2
