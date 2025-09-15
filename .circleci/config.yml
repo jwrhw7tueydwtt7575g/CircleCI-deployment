@@ -30,15 +30,13 @@ jobs:
       - run:
           name: Write Dockerfile to temp file
           command: |
-            cat <<'EOF' > Dockerfile.ci
-            FROM python:3.9
-            WORKDIR /app
-            COPY . /app
-            RUN pip install --no-cache-dir -e .
-            EXPOSE 5000
-            ENV FLASK_APP=application.py
-            CMD ["python", "application.py"]
-            EOF
+            echo "FROM python:3.9" > Dockerfile.ci
+            echo "WORKDIR /app" >> Dockerfile.ci
+            echo "COPY . /app" >> Dockerfile.ci
+            echo "RUN pip install --no-cache-dir -e ." >> Dockerfile.ci
+            echo "EXPOSE 5000" >> Dockerfile.ci
+            echo "ENV FLASK_APP=application.py" >> Dockerfile.ci
+            echo "CMD [\"python\", \"application.py\"]" >> Dockerfile.ci
       - run:
           name: Build Docker image from temp Dockerfile
           command: docker build -t myapp:latest -f Dockerfile.ci .
