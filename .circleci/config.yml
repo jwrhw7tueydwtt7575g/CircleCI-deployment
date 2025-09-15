@@ -56,9 +56,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - add_ssh_keys:
-          fingerprints:
-            - "ADD_YOUR_SSH_KEY_FINGERPRINT_HERE"
+        - add_ssh_keys
       - run:
           name: Copy Docker image to EC2
           command: scp -o StrictHostKeyChecking=no myapp.tar ubuntu@13.60.190.186:/home/ubuntu/myapp.tar
